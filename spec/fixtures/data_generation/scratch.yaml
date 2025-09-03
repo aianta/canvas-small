@@ -1,0 +1,18 @@
+---
+- :id: rat2
+  :points: 25.0
+  :criterion_id: crit1
+  :learning_outcome_id: 
+  :description: B
+  :comments_enabled: true
+  :comments: You can do better
+  :comments_html: !str You can do better
+- :id: rat1
+  :points: 50.0
+  :criterion_id: crit2
+  :learning_outcome_id: 
+  :description: Pass
+  :comments_enabled: true
+  :comments: sure
+  :comments_html: !str sure
+

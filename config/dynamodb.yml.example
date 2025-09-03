@@ -1,0 +1,18 @@
+development:
+  auditors:
+    region: us-east-42
+    endpoint: http://dynamodb:8000/
+    table_prefix: canvas_auditors_dev
+    vault_credential_path: sts/testaccount/sts/canvas-auditors-test
+test:
+  auditors:
+    region: us-east-42
+    endpoint: http://dynamodb:8000/
+    table_prefix: canvas_auditors_test
+    vault_credential_path: sts/testaccount/sts/canvas-auditors-test
+production:
+  auditors:
+    region: us-east-42
+    endpoint: http://dynamodb:8000/
+    table_prefix: canvas_auditors_fake
+    vault_credential_path: sts/testaccount/sts/canvas-auditors-prod

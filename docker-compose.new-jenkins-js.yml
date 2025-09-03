@@ -1,0 +1,5 @@
+version: "2.3"
+services:
+  canvas:
+    image: $KARMA_RUNNER_IMAGE
+    init: true

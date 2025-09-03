@@ -1,0 +1,81 @@
+/*
+ * Copyright (C) 2020 - present Instructure, Inc.
+ *
+ * This file is part of Canvas.
+ *
+ * Canvas is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Affero General Public License as published by the Free
+ * Software Foundation, version 3 of the License.
+ *
+ * Canvas is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+@use "sass:list";
+
+$fonts: (
+  'Lato Extended': ("faces": ((normal 300): 'lato/extended/Lato-Light',
+      (normal 400): 'lato/extended/Lato-Regular',
+      (italic 400): 'lato/extended/Lato-Italic',
+      (normal 700): 'lato/extended/Lato-Bold',
+      (italic 700): 'lato/extended/Lato-BoldItalic',
+    )),
+  'Balsamiq Sans': ( // Balsamiq Sans has undesired glyphs for 2768-2775 (inclusive)
+    // Therefore that range is excluded
+    "ranges": (U+0021-2767, U+2776-FFFF),
+    "faces": ((normal 400): 'balsamiq_sans/BalsamiqSans-Regular',
+      (italic 400): 'balsamiq_sans/BalsamiqSans-Italic',
+      (normal 700): 'balsamiq_sans/BalsamiqSans-Bold',
+      (italic 700): 'balsamiq_sans/BalsamiqSans-BoldItalic',
+    )),
+  'Architects Daughter': ("faces": ((normal 400): 'architects_daughter/ArchitectsDaughter-Regular',
+    )),
+  'OpenDyslexic': ("faces": ((normal 400): 'open_dyslexic/OpenDyslexic-Regular',
+      (italic 400): 'open_dyslexic/OpenDyslexic-Italic',
+      (normal 700): 'open_dyslexic/OpenDyslexic-Bold',
+      (italic 700): 'open_dyslexic/OpenDyslexic-BoldItalic',
+    )),
+  'OpenDyslexicMono': ("faces": ((normal 400): 'open_dyslexic/OpenDyslexicMono-Regular',
+    ))
+);
+
+@each $family, $familyDef in $fonts {
+  $ranges: (
+    null) !default;
+  $ranges: map-get($familyDef, "ranges"
+  );
+$faces: map-get($familyDef, "faces");
+
+@each $desc, $path in $faces {
+  @each $range in $ranges {
+    @font-face {
+      font-family: $family;
+      font-style: list.nth($desc, 1);
+      font-weight: list.nth($desc, 2);
+      src: url("/fonts/#{$path}.woff2");
+      font-display: swap;
+
+      @if $range !=null {
+        unicode-range: $range;
+      }
+    }
+  }
+}
+}
+
+/*
+ * Explicitly use Zapf Dingbats for the small set of characters in Balsamiq Sans that don't match
+ * the standard glyphs. This shouldn't be necessary, but both Chrome and Safari won't render
+ * the font correctly in some cases without this explicit definition.
+ */
+@font-face {
+  font-family: "Balsamiq Sans";
+  src: local("Zapf Dingbats");
+  font-display: swap;
+  unicode-range: U+2768-2775;
+}

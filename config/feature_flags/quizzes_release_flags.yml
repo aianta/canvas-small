@@ -1,0 +1,120 @@
+---
+new_quizzes_migration:
+  state: allowed
+  display_name: New Quizzes migration during course import/copy
+  description: Allow migration of quizzes during course copy and import
+  applies_to: RootAccount
+  beta: true
+migrate_to_new_quizzes_by_default:
+  state: allowed
+  display_name: New Quizzes migration enabled by default
+  description: Sets the default option for course copy and importing to New Quizzes
+  applies_to: RootAccount
+  beta: true
+require_migration_to_new_quizzes:
+  state: allowed
+  display_name: New Quizzes migration required
+  description: Disable New Quiz importing and migration checkboxes, defaulting them to enabled
+  applies_to: RootAccount
+  beta: true
+new_quizzes_assignment_build_button:
+  display_name: New Quizzes Assignment Build Button
+  description: Add a Build button on the Assignment edit page for New Quizzes Assignments
+  applies_to: SiteAdmin
+  state: hidden
+new_quizzes_bank_migrations:
+  display_name: New Quizzes Banks Migrations
+  description: Enable migrating question banks to New Quizzes during course import/copy
+  applies_to: SiteAdmin
+  state: hidden
+  beta: true
+  environments:
+    production:
+      state: hidden
+new_quizzes_account_course_level_item_banks:
+  display_name: New Quizzes Account and Course Level Item Banks
+  description: |-
+    If new quizzes is enabled, this allows for the creation and management of item
+    banks owned by specific courses and the root account in new quizzes.
+  applies_to: SiteAdmin
+  state: hidden
+new_quizzes_by_default:
+  state: allowed
+  display_name: Disable Classic Quiz Creation
+  description: Use New Quizzes as the default quizzing engine when creating a quiz. Removes the ability to create classic quizzes.
+  applies_to: Course
+  visible_on: quizzes_next_visible_on_hook
+new_quizzes_allow_service_jwt_refresh:
+  state: hidden
+  display_name: New Quizzes Service JWT Refresh
+  description: Enable New Quizzes to refresh Service JWTs used by RCE
+  applies_to: SiteAdmin
+  environments:
+    development:
+      state: allowed_on
+new_quizzes_exports:
+  state: hidden
+  display_name: New Quizzes Export Support
+  description: Support exporting New Quizzes in QTI format
+  applies_to: SiteAdmin
+new_quizzes_migrate_without_content_rewrite:
+  state: hidden
+  display_name: New Quizzes Migrate Without Content Rewrite
+  description: Migrating a single classic quiz will leave HTML rich content fields as-is.
+  applies_to: SiteAdmin
+  environments:
+    development:
+      state: allowed_on
+new_quizzes_common_cartridge:
+  state: hidden
+  display_name: New Quizzes Common Cartridge Support
+  description: If enabled, Canvas will be able to export New Quizzes as a part of Common Cartridge Export Packages.
+  applies_to: SiteAdmin
+new_quizzes_subaccount_sharing_permission:
+  state: hidden
+  display_name: New Quizzes Subaccount Sharing Permission
+  description: Allow the "Item Banks - share with subaccounts" permission
+  applies_to: SiteAdmin
+common_cartridge_qti_new_quizzes_import:
+  state: hidden
+  display_name: Common Cartridge QTI New Quizzes Import
+  description: If enabled, users will be able to import a Common Cartridge with New Quizzes in QTI format, users will be able to select the option to import existing quizzes as New Quizzes or import as the current quiz type.
+  applies_to: SiteAdmin
+impact_integration:
+  state: hidden
+  display_name: Impact integration for New Quizzes
+  description: Allow Impact services to reach New Quizzes
+  applies_to: SiteAdmin
+  shadow: true
+new_quizzes_enable_quiz_visibility_after_course_conclusion:
+  state: hidden
+  display_name: Enable quiz visibility after course conclusion
+  description: Enable quiz visibility after course conclusion
+  applies_to: RootAccount
+  shadow: true
+new_quizzes_unattached_bank_migrations:
+  display_name: New Quizzes Unattached Bank Migrations
+  description: Enable migrating all question banks to New Quizzes during course import/copy
+  applies_to: SiteAdmin
+  state: hidden
+new_quizzes_report_failed_duplicates:
+  state: hidden
+  display_name: Report failed duplicates to Sentry when importing New Quizzes
+  description: If enabled, Canvas will report failed duplicates to Sentry
+  applies_to: SiteAdmin
+new_quizzes_navigation_updates:
+  display_name: New Quizzes Navigation Updates
+  description: If enabled, New Quizzes will launch in a display type that includes breadcrumbs and left-side menu
+  state: hidden
+  applies_to: SiteAdmin
+new_quizzes_separators:
+  display_name: New Quizzes Separators
+  description: If enabled, users can set decimal and thousands separators for New Quizzes
+  state: allowed
+  applies_to: SiteAdmin
+new_quizzes_ai_quiz_generation:
+  display_name: AI Quiz Generation
+  description: If enabled, the "Generate With AI" button will appear, allowing AI-based quiz creation for institutions in the Early Adopter Program
+  state: hidden
+  shadow: true
+  applies_to: Course

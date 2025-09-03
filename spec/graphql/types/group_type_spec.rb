@@ -1,0 +1,202 @@
+# frozen_string_literal: true
+
+#
+# Copyright (C) 2017 Instructure, Inc.
+#
+# This file is part of Canvas.
+#
+# Canvas is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Affero General Public License as published by the Free
+# Software Foundation, version 3 of the License.
+#
+# Canvas is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Affero General Public License along
+# with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+require_relative "../graphql_spec_helper"
+
+describe Types::GroupType do
+  before(:once) do
+    course_with_student(active_all: true)
+    @student_not_in_group = @student
+
+    student_in_course(active_all: true)
+    @student_in_group = @student
+
+    @group_set = @course.group_categories.create! name: "asdf"
+    @group = @group_set.groups.create! name: "group 1", context: @course, sis_source_id: "sisGroup"
+    @membership = @group.add_user(@student_in_group)
+  end
+
+  let(:group_type) { GraphQLTypeTester.new(@group, current_user: @teacher) }
+
+  it "works" do
+    expect(group_type.resolve("_id")).to eq @group.id.to_s
+    expect(group_type.resolve("name")).to eq @group.name
+    expect(group_type.resolve("membersConnection { edges { node { _id } } }"))
+      .to eq @group.group_memberships.map(&:to_param)
+    expect(group_type.resolve("membersCount")).to eq @group.members_count
+    expect(group_type.resolve("nonCollaborative")).to eq @group.non_collaborative
+    expect(group_type.resolve("state")).to eq @group.workflow_state
+  end
+
+  it "requires read permission" do
+    user = user_factory(active_all: true)
+    expect(group_type.resolve("_id", current_user: user)).to be_nil
+  end
+
+  describe "membersConnection" do
+    it "works" do
+      expect(group_type.resolve("membersConnection { nodes { user { _id } } }")).to eq [@membership.user_id.to_s]
+      expect(group_type.resolve("membersConnection { nodes { state } }")).to eq [@membership.workflow_state]
+    end
+
+    it "requires permission" do
+      expect(
+        group_type.resolve("membersConnection { nodes { _id } }",
+                           current_user: @student_not_in_group)
+      ).to be_nil
+    end
+  end
+
+  describe "member" do
+    it "works" do
+      expect(
+        group_type.resolve(%|member(userId: "#{@student_in_group.id}") { _id }|)
+      ).to eq @membership.id.to_s
+    end
+
+    it "returns nil if membership not found in group" do
+      expect(
+        group_type.resolve(%|member(userId: "#{@student_not_in_group.id}") { _id }|)
+      ).to be_nil
+    end
+
+    it "requires permission" do
+      expect(
+        group_type.resolve(%|member(userId: "#{@student_in_group.id}") { _id }|,
+                           current_user: @student_not_in_group)
+      ).to be_nil
+    end
+  end
+
+  describe "can_message" do
+    it "returns false when course is active" do
+      expect(
+        group_type.resolve("canMessage")
+      ).to be true
+    end
+
+    it "returns nil when course is deleted" do
+      @group.context.destroy!
+      expect(
+        group_type.resolve("canMessage")
+      ).to be_nil
+    end
+
+    it "returns false when course is concluded" do
+      @group.context.complete!
+      expect(
+        group_type.resolve("canMessage")
+      ).to be false
+    end
+  end
+
+  context "sis field" do
+    let(:manage_admin) { account_admin_user_with_role_changes(role_changes: { read_sis: false }) }
+    let(:read_admin) { account_admin_user_with_role_changes(role_changes: { manage_sis: false }) }
+
+    it "returns sis_id if you have read_sis permissions" do
+      tester = GraphQLTypeTester.new(@group, current_user: read_admin)
+      expect(tester.resolve("sisId")).to eq "sisGroup"
+    end
+
+    it "returns sis_id if you have manage_sis permissions" do
+      tester = GraphQLTypeTester.new(@group, current_user: manage_admin)
+      expect(tester.resolve("sisId")).to eq "sisGroup"
+    end
+
+    it "doesn't return sis_id if you don't have read_sis or management_sis permissions" do
+      tester = GraphQLTypeTester.new(@group, current_user: @student_in_group)
+      expect(tester.resolve("sisId")).to be_nil
+    end
+  end
+
+  context "ActivityStream" do
+    it "returns the activity stream summary" do
+      course_with_teacher(active_all: true, user: user_with_pseudonym)
+      @group = @course.groups.create!(name: "Group 1")
+      @group.users << @user
+      @context = @group
+      @topic1 = discussion_topic_model
+
+      cur_resolver = GraphQLTypeTester.new(@group, current_user: @user)
+      expect(cur_resolver.resolve("activityStream { summary { type } }")).to match_array %w[DiscussionTopic]
+      expect(cur_resolver.resolve("activityStream { summary { count } } ")).to match_array [1]
+      expect(cur_resolver.resolve("activityStream { summary { unreadCount } } ")).to match_array [1]
+      expect(cur_resolver.resolve("activityStream { summary { notificationCategory } } ")).to match_array [nil]
+    end
+  end
+
+  describe "group_category" do
+    it "returns group category when user has proper permissions" do
+      expect(group_type.resolve("groupCategory { _id }")).to eq @group_set.id.to_s
+      expect(group_type.resolve("groupCategory { name }")).to eq @group_set.name
+    end
+
+    it "returns nil when user lacks permissions" do
+      unauthorized_user = user_factory(active_all: true)
+      result = GraphQLTypeTester.new(@group, current_user: unauthorized_user).resolve("groupCategory { _id }")
+      expect(result).to be_nil
+    end
+
+    it "returns group category for teacher" do
+      teacher = GraphQLTypeTester.new(@group, current_user: @teacher)
+      expect(teacher.resolve("groupCategory { _id }")).to eq @group_set.id.to_s
+    end
+
+    it "returns group category when user has read permissions on group category (e.g. student in group)" do
+      student = GraphQLTypeTester.new(@group, current_user: @student_in_group)
+      expect(student.resolve("groupCategory { _id }")).to eq @group_set.id.to_s
+    end
+
+    it "returns nil when user lacks read permissions on group category (e.g. student not in group)" do
+      student_not_in_group = GraphQLTypeTester.new(@group, current_user: @student_not_in_group)
+      expect(student_not_in_group.resolve("groupCategory { _id }")).to be_nil
+    end
+
+    context "with non-collaborative group category" do
+      let(:account) { @course.account }
+
+      before(:once) do
+        account.enable_feature!(:assign_to_differentiation_tags)
+        account.settings[:allow_assign_to_differentiation_tags] = { value: true }
+        account.save!
+        @non_collab_group_category = @course.group_categories.create!(name: "non-collaborative group category", non_collaborative: true)
+        @non_collab_group = @non_collab_group_category.groups.create!(name: "non-collaborative group", context: @course)
+      end
+
+      it "returns group category for user with manage tags permissions" do
+        user_with_permissions = GraphQLTypeTester.new(@non_collab_group, current_user: @teacher)
+        expect(user_with_permissions.resolve("groupCategory { _id }")).to eq @non_collab_group_category.id.to_s
+      end
+
+      it "returns nil for user without any granular manage tags permissions" do
+        RoleOverride::GRANULAR_MANAGE_TAGS_PERMISSIONS.each do |permission|
+          account.role_overrides.create!(
+            permission:,
+            role: teacher_role,
+            enabled: false
+          )
+        end
+        user_without_permissions = GraphQLTypeTester.new(@non_collab_group, current_user: @teacher)
+        expect(user_without_permissions.resolve("groupCategory { _id }")).to be_nil
+      end
+    end
+  end
+end

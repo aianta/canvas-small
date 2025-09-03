@@ -1,0 +1,253 @@
+---
+assignments_2_student:
+  state: hidden
+  display_name: Assignment Enhancements - Student
+  description:
+    wrapper: <a href="https://community.canvaslms.com/t5/Assignment-Enhancements-Users/gh-p/student_enhancements">\1</a>
+    assignments_2_student_description: This feature enhances the assignment submission and feedback workflow for students. When this flag is enabled, early access to ongoing improvements will be displayed automatically with every release. For full details, please see the *Assignment Enhancements User Group* in the Canvas Community.
+  applies_to: Course
+  root_opt_in: true
+  beta: true
+
+assignments_2_teacher:
+  state: hidden
+  display_name: Assignments 2 Teacher View
+  description: Use the new assignments teacher page
+  applies_to: Course
+  root_opt_in: true
+  environments:
+    development:
+      state: disabled
+    production:
+      state: disabled
+
+confetti_branding:
+  state: 'hidden'
+  display_name: 'Account branding for confetti'
+  description: Applies account branding to confetti splashes
+  applies_to: SiteAdmin
+
+course_paces_skip_selected_days:
+  state: hidden
+  display_name: 'Course Pacing Skip Selected Days'
+  description: Course pacing removes support for exclude weekends field and add the ability to select specific days of the week.
+  applies_to: RootAccount
+  beta: true
+  environments:
+    development:
+      state: allowed_on
+    ci:
+      state: allowed_on
+
+create_course_subaccount_picker:
+  state: hidden
+  applies_to: RootAccount
+  display_name: 'Allow sub-account selection when users manually create courses'
+  description: |-
+    Rather than automatically placing manually created courses into the
+    "Manually Created Courses" sub-account, when enabled, this feature allows
+    people who can manually create courses to put those courses into any sub-account
+    where they have enrollments.
+
+enhanced_course_creation_account_fetching:
+  applies_to: SiteAdmin
+  state: hidden
+  display_name: 'Use a new endpoint for fetching course creation accounts'
+  description: Use new improved logic to fetch all accounts a user can create courses in.
+
+account_level_blackout_dates:
+  applies_to: SiteAdmin
+  state: hidden
+  display_name: Account-level course pacing blackout dates
+  description: |-
+    Allow course pacing blackout dates to be set for accounts instead of just courses.
+
+render_both_to_do_lists:
+  applies_to: SiteAdmin
+  state: hidden
+  display_name: Render both To Do lists for teachers with student enrollments
+  description: |-
+    Renders both To Do lists on the dashboard sidebar for teachers with student enrollments.
+
+blueprint_line_item_support:
+  state: hidden
+  display_name: 'Blueprint Resource ID Support'
+  description: Allows blueprint courses to keep track of assignment's resource id changes.
+  applies_to: SiteAdmin
+
+content_migration_asset_map_v2:
+  state: hidden
+  display_name: Content Migration Asset Map v2
+  description: Adds Additional Fields to the Content Migration Asset Map
+  applies_to: SiteAdmin
+
+instui_for_import_page:
+  state: hidden
+  display_name: Use InstUI for the course import page
+  description: |-
+    If enabled, the course import page will use InstUI components
+  applies_to: SiteAdmin
+  environments:
+    ci:
+      state: allowed_on
+    development:
+      state: allowed_on
+
+differentiated_files:
+  state: hidden
+  display_name: Selective Release - Files
+  description: |-
+    If enabled, files become assignable to specific individuals and groups using the
+    same interface that other learning object use.
+  applies_to: SiteAdmin
+
+observer_appointment_groups:
+  applies_to: SiteAdmin
+  state: hidden
+  display_name: Allow observers to schedule appointments in the calendar
+  description: |-
+    When enabled, teachers can choose to allow observers to schedule appointments
+    when creating appointment groups in the calendar.
+  environments:
+    ci:
+      state: allowed_on
+    development:
+      state: allowed_on
+
+instui_header:
+  state: hidden
+  display_name: Use InstUI new headers
+  description: |-
+    If enabled, pages will use the new InstUI headers
+  applies_to: SiteAdmin
+
+dashboard_graphql_integration:
+  state: hidden
+  display_name: Dashboard GraphQL Integration
+  description: |-
+    Integrate GraphQL queries and mutations for the Dashboard to improve loading speed
+    and simplify data fetching logic.
+  applies_to: SiteAdmin
+
+modules_page_hide_blueprint_lock_icon_for_children:
+  state: hidden
+  display_name: Hide Blueprint Lock Icon on child course Modules Page
+  description: |-
+    If enabled, the blueprint lock icon will be hidden on the modules page. This is a performance hack and should only
+    be used for customers with a large number of content items (2000+) in a course.
+  applies_to: Account
+
+modules_teacher_module_selection:
+  state: hidden
+  display_name: Allow teachers to select a single module to show on the modules page for teachers
+  description: |-
+    If enabled, teachers will be able to a single module to show on the modules page for teachers.
+  applies_to: Account
+
+modules_student_module_selection:
+  state: hidden
+  display_name: Allow teachers to select a single module to show on the modules page for students
+  description: |-
+    If enabled, teachers will be able to a single module to show on the modules page for students.
+  applies_to: Account
+
+modules_requirements_allow_percentage:
+  state: hidden
+  applies_to: RootAccount
+  display_name: Module Requirements Allow Set By Percentage
+  description: Allows for Module Requirements to be set by percentage.
+
+calendar_events_api_pagination_enhancements:
+  state: hidden
+  display_name: Calendar Events API Pagination Enhancements
+  description: |-
+    Improves API pagination handling for assignment events on user calendar.
+  applies_to: RootAccount
+
+modules_page_rewrite:
+  state: hidden
+  display_name: Modules Page Rewrite Teacher View
+  description: |-
+    If enabled, the modules page will use the new modules page rewrite.
+  applies_to: RootAccount
+
+graphql_persisted_queries:
+  state: hidden
+  display_name: Persisted GraphQL Queries
+  description: |-
+    Allows invocation of GraphQL queries by operation name.
+  applies_to: RootAccount
+
+modules_perf:
+  state: hidden
+  display_name: Modules Performance Improvements
+  description: |-
+    Improves modules page performance on courses with a large number of modules or module items.
+  applies_to: Account
+
+modules_page_rewrite_student_view:
+  state: hidden
+  display_name: Modules Page Rewrite Student View
+  description: |-
+    If enabled, the modules page will use the new modules page rewrite on student view.
+  applies_to: Course
+
+create_wiki_page_mastery_path_overrides:
+  state: hidden
+  display_name: In MasteryPaths Create AssignmentOverrides on WikiPages Instead of Creating a Hidden Assignment
+  description: |-
+    In Mastery Paths create AssignmentOverrides directly onto WikiPages instead of creating a hidden Assignment.
+  applies_to: SiteAdmin
+
+create_external_apps_side_tray_overrides:
+  state: hidden
+  display_name: Enable External Apps Side Tray
+  description: |-
+    If enabled, an External Apps menu item will appear in the Module popover menu. When clicked, a side tray
+    displaying the external apps will appear
+  applies_to: SiteAdmin
+  environments:
+    ci:
+      state: allowed_on
+    development:
+      state: allowed_on
+
+use_dyslexic_font:
+  state: allowed
+  display_name: Use a dyslexia friendly font
+  description: |-
+    When enabled, this setting replaces the default font in Canvas with OpenDyslexic,
+    an open source font created to help increase readability for readers with dyslexia.
+  applies_to: User
+
+
+wiki_page_mastery_path_no_assignment_group:
+  state: hidden
+  display_name: In MasteryPaths WikiPages Hidden Assignment has not Assignment Group
+  description: |-
+    In WikiPage create/update annd assign to Mastery Path hidden Assignment has not an Assignment Group.
+  applies_to: SiteAdmin
+  environments:
+    ci:
+      state: allowed_on
+    development:
+      state: allowed_on
+
+blueprint_support_sync_for_folder_movement_to_root_folder:
+  state: hidden
+  display_name: Blueprint support sync for folder movement to root folder
+  description: |-
+    Moving a folder from a sub folder to the root folder then bp sync should sync over the change.
+  applies_to: SiteAdmin
+  environments:
+    ci:
+      state: allowed_on
+    development:
+      state: allowed_on
+
+widget_dashboard:
+  state: hidden
+  display_name: Widget Dashboard
+  description: |-
+    When enabled, this allows learners to add, remove, and rearrange dashboard widgets.
+  applies_to: RootAccount

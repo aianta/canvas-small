@@ -1,0 +1,162 @@
+/*
+ * Copyright (C) 2015 - present Instructure, Inc.
+ *
+ * This file is part of Canvas.
+ *
+ * Canvas is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Affero General Public License as published by the Free
+ * Software Foundation, version 3 of the License.
+ *
+ * Canvas is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+@import "base/environment";
+
+#editCalendarEventFull {
+  label.label_with_checkbox {
+    margin-top: 10px;
+    input[type="checkbox"] {
+      margin: direction-sides(0 4px 0 0);
+    }
+  }
+  input, select {
+    vertical-align: baseline;
+  }
+  label.row_header {
+    font-weight: bold;
+  }
+  .date_start_end_row {
+    display: flex;
+    flex-wrap: wrap;
+
+    .date_field {
+      width: 7.5rem;
+    }
+    .time_field {
+      width: 6rem;
+    }
+    .time_separator {
+      line-height: 28px;
+      padding: 0px;
+      text-align: center;
+      margin: 4px;
+    }
+    .date_field_container {
+      margin-bottom: 8px;
+      input {
+        margin-bottom: 3px;
+      }
+      .input-append {
+        margin-bottom: 0px;
+        margin-#{direction(right)}: 8px;
+      }
+    }
+    .time_range_container {
+      display: flex;
+    }
+  }
+  .show_if_using_sections {
+    display: none;
+  }
+  &.use_section_dates {
+    .show_if_using_sections {
+      display: block;
+    }
+    .hide_if_using_sections {
+      display: none;
+    }
+  }
+  #duplicate_frequency {
+    width: 7.5rem;
+  }
+  #duplicate_interval {
+    width: 3rem;
+  }
+  #duplicate_count {
+    width: 3rem;
+  }
+  .location_label {
+    width: 5rem;
+  }
+  .duplicate_label {
+    width: 3rem;
+    display: inline-block;
+    text-align: direction(right);
+  }
+  .duplicate_event_row {
+    input {
+      margin: direction-sides(0 4px 0 4px);
+    }
+    .label_with_checkbox {
+      margin-#{direction(left)}: 36px;
+    }
+  }
+  .form-actions .btn {
+    margin-bottom: 5px;
+  }
+
+  .error-text {
+    color: $ic-bg-light-danger-text;
+  }
+
+  input[type="text"].error,
+  input[type="number"].error {
+    border: 1px solid $crimson;
+    margin-bottom: 0;
+  }
+
+  .error-message {
+    display: flex;
+    gap: 0.3em;
+    font-size: 0.875rem;
+    color: $ic-bg-light-danger-text;
+    margin-top: 0.25em;
+    margin-bottom: $baseLineHeight * 0.5;
+
+    i {
+      margin-top: 0.175em;
+    }
+  }
+
+  .datetime_suggest {
+    width: 6rem;
+    padding-left: 0;
+  }
+  .date_field_responsive .datetime_suggest {
+    width: 8rem;
+  }
+  @media (max-width: 767px) {
+    .date_field_responsive {
+      display: block;
+      width: 100%;
+    }
+    .date_field_responsive input.date_field {
+      width: 11.2rem !important;
+    }
+
+    .date_field_responsive .datetime_suggest {
+      width: 12rem;
+    }
+  }
+  .duplicate_event_row {
+    select {
+      margin-bottom: 0;
+    }
+
+    .error-message {
+      margin-top: 11px;
+      margin-left: 3.5rem;
+      margin-bottom: 0;
+    }
+  }
+
+  .spacer-top {
+    margin-top: 11px;
+  }
+}

@@ -1,0 +1,55 @@
+/*
+ * Copyright (C) 2018 - present Instructure, Inc.
+ *
+ * This file is part of Canvas.
+ *
+ * Canvas is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Affero General Public License as published by the Free
+ * Software Foundation, version 3 of the License.
+ *
+ * Canvas is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+.assignment-student-submission-tracker,
+.selected-submission-grade {
+  line-height: normal;
+}
+
+.assignment-student-header {
+  @include desktop-only {
+    top: 0px;
+    position: sticky;
+  }
+  padding-bottom: 12px;
+  #{direction(right)}: 0px;
+  background-color: white;
+  z-index: 100;
+}
+
+#assignment-student-header-content {
+  flex-wrap: wrap;
+  gap: 12px;
+  @include breakpoint(desktop) {
+    flex-wrap: nowrap;
+    gap: 36px;
+  }
+}
+
+.steps-container {
+  margin-bottom: 3.75rem;
+}
+
+.a2-toggle-details-container {
+  margin-bottom: 1.5rem;
+}
+
+.points-text {
+  // This matches the value InstUI uses for weight="light"
+  font-weight: 300;
+}

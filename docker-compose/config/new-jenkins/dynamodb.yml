@@ -1,0 +1,6 @@
+test:
+  auditors:
+    region: US East
+    endpoint: http://dynamodb:8000
+    table_prefix: canvas_auditors<%= ENV.fetch('PARALLEL_INDEX', '') %>
+    vault_credential_path: sts/testaccount/sts/canvas-auditors-test

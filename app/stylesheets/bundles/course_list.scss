@@ -1,0 +1,108 @@
+/*
+ * Copyright (C) 2014 - present Instructure, Inc.
+ *
+ * This file is part of Canvas.
+ *
+ * Canvas is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Affero General Public License as published by the Free
+ * Software Foundation, version 3 of the License.
+ *
+ * Canvas is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+@import "base/environment";
+
+.page_header {
+  @include page_header;
+}
+.page_header_container {
+  @include page_header_container
+}
+
+.course-list-table {
+  table-layout: fixed;
+  white-space: nowrap;
+
+  /* Column widths are based on these cells */
+  .course-list-star-column {
+    width: 10%;
+    &.course-list-favorite-icon {
+      color: $ic-color-icon-disabled;
+    }
+  }
+  .course-list-sort-icon {
+    color: $ic-color-medium;
+    &.sorted {
+      color: $electric;
+    }
+  }
+  .course-list-column-header {
+    a {
+      color: $ic-font-color-dark;
+      text-decoration: none;
+    }
+  }
+  .course-list-term-column,
+  .course-list-enrolled-as-column {
+    width: 15%;
+  }
+  .course-list-published-column {
+    width: 10%;
+  }
+  .course-list-nickname-column {
+    width: 25%;
+  }
+  .course-list-course-title-column,
+  .course-list-not-favoritable,
+  .course-list-group-column {
+    width: 35%;
+  }
+  .course-list-accessibility-column {
+    width: 10%;
+  }
+  .course-list-no-left-border {
+    border-#{direction(left)}: 0;
+  }
+  .course-list-table-row:hover {
+    background-color: $lightBackground;
+  }
+}
+
+.course-list-table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.course-list-favorite-course {
+  color: $ic-color-alert;
+}
+
+.course-list-unpublished-course {
+  color: $ic-color-alert;
+}
+
+.course-list-unpublished-course-row {
+  background: #F2F4F4;
+}
+
+.content--hasMarginTop {
+  margin-top: $ic-sp*2;
+}
+
+.course-color-block:before {
+  content:'\25A0';
+  @include fontSize(21px);
+  padding-#{direction(right)}: $ic-sp*0.5;
+  vertical-align: baseline;
+}
+
+.icon-publish.icon-Solid {
+  color: $ic-color-success;
+}

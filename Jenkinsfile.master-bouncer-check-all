@@ -1,0 +1,106 @@
+#!/usr/bin/env groovy
+
+/*
+ * Copyright (C) 2019 - present Instructure, Inc.
+ *
+ * This file is part of Canvas.
+ *
+ * Canvas is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Affero General Public License as published by the Free
+ * Software Foundation, version 3 of the License.
+ *
+ * Canvas is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+library 'canvas-builds-library'
+
+pipeline {
+  agent { label 'canvas-docker' }
+
+  options {
+    ansiColor('xterm')
+    timestamps()
+  }
+
+  environment {
+    // we only use this
+    PATCHSET_TAG = "$DOCKER_REGISTRY_FQDN/jenkins/canvas-lms:master"
+    GERRIT_BRANCH = 'master'
+    GERGICH_REVIEW_LABEL = 'Lint-Review'
+    MASTER_BOUNCER_KEY = credentials('master-bouncer-key')
+  }
+
+  stages {
+    stage('Setup') {
+      steps {
+        cleanAndSetup()
+        sh 'docker pull instructure/gergich'
+        sh 'git config --add remote.origin.fetch +refs/heads/master:refs/remotes/origin/master'
+        sh 'docker build --file Dockerfile.master-bouncer --tag instructure/master_bouncer .'
+        sh 'docker run --rm --volume ./.git:/app/.git --volume gitconfig:/root -e RUBY_LOG_LEVEL=DEBUG --entrypoint git instructure/master_bouncer config --global --add safe.directory /app'
+      }
+    }
+
+    stage('Master Bouncer Check All') {
+      steps {
+        // should only take about 5-10 min, but just in case
+        timeout(time: 30) {
+          script {
+            withCredentials([sshUserPrivateKey(credentialsId: '44aa91d6-ab24-498a-b2b4-911bcb17cc35', keyFileVariable: 'SSH_KEY_PATH', usernameVariable: 'SSH_USER_NAME')]) {
+              sh ''' #!/usr/bin/env bash
+                set -exuE
+
+                cleanup() {
+                  kill "$SSH_AGENT_PID"
+                }
+                trap cleanup EXIT
+
+                if [[ -v SSH_AUTH_SOCK ]]; then
+                  echo "ssh is set and running!"
+                else
+                  if [[ -z "$SSH_KEY_PATH" ]]; then
+                    echo "No SSH agent present and no key file path supplied, aborting!"
+                    exit 1
+                  fi
+                  echo "No SSH agent present, starting one"
+                  SSH_AGENT_STARTED=1
+                  eval `ssh-agent`
+                  ssh-add "$SSH_KEY_PATH"
+                fi
+
+                docker run \
+                --volume gitconfig:/root \
+                --volume "$SSH_KEY_PATH:$SSH_KEY_PATH" \
+                --volume ./.git:/app/.git \
+                --env RUBY_LOG_LEVEL=DEBUG  \
+                --env SSH_KEY_PATH \
+                --env SSH_USER_NAME \
+                --env MASTER_BOUNCER_KEY \
+                --env GERGICH_REVIEW_LABEL=Lint-Review \
+                --env GERRIT_HOST \
+                --env GERRIT_PROJECT=canvas-lms \
+                --env GERRIT_BRANCH=master \
+                --entrypoint master_bouncer \
+                instructure/master_bouncer check_all
+              '''
+            }
+          }
+        }
+      }
+    }
+  }
+
+  post {
+    cleanup {
+      script {
+        libraryScript.execute 'bash/docker-cleanup.sh --allow-failure'
+      }
+    }
+  }
+}

@@ -1,0 +1,4 @@
+development:
+  region: us-east-1
+  vault_credential_path: sts/testaccount/sts/canvas-notification-service
+  # notification_service_queue_name: notification-service

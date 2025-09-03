@@ -1,0 +1,40 @@
+@import 'base/environment';
+
+// these are the styles for the  Add people dialog
+.addpeople {
+  .addpeople__peoplesearch {
+    .peoplesearch__instructions {
+      margin: 1.5em 0;
+      text-align: center;
+      .usericon {
+        margin: 0 auto;
+        font-size: 48px;
+        line-height: 50px;
+      }
+    }
+    .peoplesearch_container {
+      margin-top: 1.5em;
+    }
+  }
+  .addpeople__peoplevalidationissues {
+    tr {
+      td {
+        align-content: start;
+
+        &:first-of-type {
+          width: 30px;
+        }
+
+        & > :first-child:has(input:checked) {
+          padding-top: .5rem;
+        }
+      }
+    }
+  }
+  .namelist {
+    margin: 1.5em 0;
+  }
+  &:focus {
+    outline: none;
+  }
+}

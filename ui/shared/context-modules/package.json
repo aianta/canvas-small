@@ -1,0 +1,8 @@
+{
+  "name": "@canvas/context-modules",
+  "private": true,
+  "version": "1.0.0",
+  "author": "neme",
+  "main": "./jquery/index.jsx",
+  "owner": "LF"
+}

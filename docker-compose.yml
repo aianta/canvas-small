@@ -1,0 +1,28 @@
+# See doc/docker/README.md or https://github.com/instructure/canvas-lms/tree/master/doc/docker
+services:
+  web: &WEB
+    build:
+      context: .
+    links:
+      - postgres
+      - redis
+    environment:
+      POSTGRES_PASSWORD: sekret
+    ports:
+      - "8088:80"
+
+  jobs:
+    <<: *WEB
+    command: bundle exec script/delayed_job run
+    ports:
+      - "8089:80"
+
+  postgres:
+    build: ./docker-compose/postgres
+    environment:
+      POSTGRES_PASSWORD: sekret
+    ports:
+      - "8432:5432"
+
+  redis:
+    image: redis:alpine
