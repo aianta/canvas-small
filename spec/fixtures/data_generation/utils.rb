@@ -79,12 +79,27 @@ class AgentTask
   attr_reader :id
   attr_reader :parameterized_text
   attr_accessor :instance_text
+  attr_accessor :type
+  attr_accessor :answer_type
+  attr_accessor :answer_key
 
 
   def initialize(data)
     @id = data[:id]
     @parameterized_text = data[:parameterized_text]
     @instance_text = data[:parameterized_text]
+
+    if data[:type]
+      @type = data[:type]
+    else
+      @type = 'Side-effect'
+    end
+
+    if @type == 'Information Seeking'
+      @answer_type = data[:answer_type]
+    end
+    
+    @answer_key = {}
     @mapping = {}
 
   end
@@ -111,7 +126,11 @@ class AgentTask
     result[:parameters] = @mapping.keys
     result[:mapping] = @mapping
     result[:instance_text] = @instance_text
-
+    result[:type] = @type
+    if result[:type] == 'Information Seeking'
+      result[:answer_type] = @answer_type
+      result[:answer_key] = @answer_key
+    end
     result
 
   end
@@ -319,6 +338,12 @@ The student account will be assumed to be the logged in user for this course.
         p.body = update["body"]
         p.save!
 
+        if update["revised_at"]
+          p.revised_at = update["revised_at"]
+          p.save!
+        end
+        
+
       }
 
       end
@@ -512,6 +537,26 @@ The student account will be assumed to be the logged in user for this course.
 
     data = data.merge({:assignment_group => @group})
     assignment = @course.assignments.create!(data.except("peer_reviews", "replies"))
+
+    # Create a dummy rubric for the assignment
+    rubric_opts = {
+      :context => @course,
+      :title => "Rubric for #{assignment.title}",
+      :data => make_rubric(data['points_possible'])
+    }
+    rubric = rubric_model(rubric_opts)
+    rubric.save!
+    rubric.reload
+
+    assignment.build_rubric_association(
+      rubric: rubric,
+      purpose: 'grading',
+      use_for_grading: true,
+      context: @course
+    )
+    assignment.rubric_association.save!
+    assignment.reload
+    assignment.save!
 
     topic = @course.discussion_topics.create!(assignment: assignment, title: data["title"], message:data["description"] )
     topic.allow_rating = true

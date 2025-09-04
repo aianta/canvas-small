@@ -278,6 +278,7 @@ courses:
           updates:
             - title: Thoughts on the course so far
               body: Ok, guys, really, what are your thoughts?!
+              revised_at: 2026-01-01 18:00:00
         - title: Planning for the group project
           body: |
             I figured we should have a page to organize our notes around the group project.

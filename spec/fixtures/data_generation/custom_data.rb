@@ -291,18 +291,6 @@ def generate_test_environment
 
             qsub.save!
 
-            # attempt["answers"].each{|answer|
-          
-            #   Quizzes::QuizSubmissionEvent.create do |event|
-            #     event.quiz_submission_id = qsub.id
-            #     event.event_type = "question_answered"
-            #     event.event_data = [{"quiz_question_id"=>"28", "answer"=>"100"}]
-            #     event.client_timestamp = Time.now.utc
-            #     event.attempt = qsub.attempt
-            #   end
-
-            # }
-
           }
 
 
@@ -630,6 +618,12 @@ def aggregate_task_objects(tasks)
     if task_entry.nil?
       task_entry = {}
       task_entry[:id] = task[:id]
+      task_entry[:type] = task[:type]
+      
+      if task[:answer_type]
+        task_entry[:answer_type] = task[:answer_type]
+      end
+
       task_entry[:paremeterized_text] = task[:paremeterized_text]
       task_entry[:parameters] = task[:parameters]
       task_entry[:instances] = []
@@ -642,6 +636,10 @@ def aggregate_task_objects(tasks)
     instance_data[:id] = SecureRandom.uuid
     instance_data[:instance_text] = task[:instance_text]
     instance_data[:mapping] = task[:mapping]
+
+    if task[:answer_key]
+      instance_data[:answer_key] = task[:answer_key]
+    end
 
     task_entry[:instances] << instance_data
 
@@ -753,8 +751,10 @@ def create_task_instances(test_course)
   tasks << task
 
   task = AgentTask.new({
-    id: "117ad520-4107-4488-9101-a2a951daebdf", 
-    parameterized_text: 'Task: View the rubric for the quiz titled "[[Quiz]]" in the course "[[Course]]" by navigating to the Grades page, clicking on "[[Quiz]]," and then clicking the "Show Rubric" link on the submission details page.'
+    id: "117ad520-4107-4488-9101-a2a951daebdf",
+    type: 'Information Seeking',
+    answer_type: 'Numeric',
+    parameterized_text: 'Task: View the rubric for the quiz titled "[[Quiz]]" in the course "[[Course]]" by navigating to the Grades page, clicking on "[[Quiz]]," and then clicking the "Show Rubric" link on the submission details page. What is the sum total number of points possible across all criteria on the rubric?'
   })
 
   task.populate(test_course) {|course, task| 
@@ -775,6 +775,11 @@ def create_task_instances(test_course)
     task.update_initalized_text("Course", course.course.name)
     task.update_initalized_text("Quiz", quiz.title)
   
+    total_points = quiz.assignment.rubric_association.rubric.data.sum{|i| i[:points]}
+
+    task.answer_key = {
+      "Number": total_points
+    }
 
   }
 
@@ -969,7 +974,9 @@ def create_task_instances(test_course)
 
   task = AgentTask.new({
     id: '19816faf-81ee-4235-8228-eb3d45e6bad3',
-    parameterized_text: 'Task: View the details of the "[[Assignment]]" assignment in the "[[Course]]" course, including its due date, points possible, and any instructor instructions.
+    type: 'Information Seeking',
+    answer_type: 'Date Time',
+    parameterized_text: 'Task: View the details of the "[[Assignment]]" assignment in the "[[Course]]" course, and return its due date.
 
 Steps to complete:
 
@@ -991,6 +998,10 @@ Steps to complete:
 
     task.update_initalized_text("Course", course.course.name)
     task.update_initalized_text("Assignment", assignment.title)
+
+    task.answer_key = {
+      "Date Time": assignment.due_at.strftime("%Y-%m-%d %H:%M")
+    }
 
   }
 
@@ -1196,13 +1207,17 @@ Steps to complete:
 
   task = AgentTask.new({
     id: 'a5660a7c-dbac-48d4-ace3-fbd6bb71d57b',
-    parameterized_text: 'Task: View the current groups you are enrolled in for the course "[[Course]]" by using the Global Navigation Menu in Canvas.'
+    type: 'Information Seeking',
+    answer_type: 'Numeric',
+    parameterized_text: 'Task: View the current groups you are enrolled in for the course "[[Course]]" by using the Global Navigation Menu in Canvas. How many groups are you currently a part of?'
   })
 
   task.populate(test_course) {|course, task|
 
     task.update_initalized_text("Course", course.course.name)
-
+    task.answer_key = {
+      "Number": course.groups.select{|g| g.users.include? course.logged_in_user}.length
+    }
   }
 
   tasks << task
@@ -1239,7 +1254,9 @@ Steps:
 
   task = AgentTask.new({
     id: '1c156f92-b926-4817-b78a-b8ad85de2484',
-    parameterized_text: 'Task: View the comments left by your instructor ([[Teacher]]) on your "[[Assignment]]" assignment in the "[[Course]]" course, and mark the comments as read. 
+    type: 'Information Seeking',
+    answer_type: 'Text',
+    parameterized_text: 'Task: View the comments left by your instructor ([[Teacher]]) on your "[[Assignment]]" assignment in the "[[Course]]" course. What was the feedback [[Teacher]] gave you?
 
 Steps to complete:
 1. In Global Navigation, click the "Courses" link, then select "[[Course]]."
@@ -1283,11 +1300,17 @@ Steps to complete:
       return
     end
 
+    submission_comment = assignment.submissions.where(user_id: course.logged_in_user).first.submission_comments.select{|c| c.author == course.teacher}.first
+
     AgentTask.assignments << assignment
 
     task.update_initalized_text("Course", course.course.name)
     task.update_initalized_text("Teacher", course.teacher.name)
     task.update_initalized_text("Assignment", assignment.title)
+
+    task.answer_key = {
+      "Text": submission_comment.comment
+    }
 
   }
 
@@ -1511,34 +1534,35 @@ Steps to complete:
 
   tasks << task
 
-  task = AgentTask.new({
-    id: '4bbdbb35-c934-40ab-a042-034f04e2de77',
-    parameterized_text: 'Task: View the peer feedback you received on the "[[Assignment]]" assignment in the "[[Course]]" course using the Assignment Details page.'
-  })
+  # Commented out as it is a duplicate of '1bfdc4bc-1ab2-4846-b840-4c65d9f9c83f'
+  # task = AgentTask.new({
+  #   id: '4bbdbb35-c934-40ab-a042-034f04e2de77',
+  #   parameterized_text: 'Task: View the peer feedback you received on the "[[Assignment]]" assignment in the "[[Course]]" course using the Assignment Details page.'
+  # })
 
-  task.populate(test_course) {|course, task| 
+  # task.populate(test_course) {|course, task| 
 
-    assignment = course.assignments.select{|a| 
-      (!AgentTask.assignments.include? a) && # Find an assignment that hasn't already been used.
-       (!a.submissions.where(user_id: course.logged_in_user).first.body.nil?) && # Where the logged in user has made a submission whose body isn't nil
-       ((a.rubric_association.nil?) || (a.rubric_association.rubric_assessments.length == 0)) && # Don't use up assignments with rubric assessments for this task.
-       (!a.submissions.where(user_id: course.logged_in_user).first.submission_comments.select{|c| course.classmates.include? c.author}.first.nil?) && (!a.submission_types.include? "online_url") # And the teacher of the course has left a comment on their submission
+  #   assignment = course.assignments.select{|a| 
+  #     (!AgentTask.assignments.include? a) && # Find an assignment that hasn't already been used.
+  #      (!a.submissions.where(user_id: course.logged_in_user).first.body.nil?) && # Where the logged in user has made a submission whose body isn't nil
+  #      ((a.rubric_association.nil?) || (a.rubric_association.rubric_assessments.length == 0)) && # Don't use up assignments with rubric assessments for this task.
+  #      (!a.submissions.where(user_id: course.logged_in_user).first.submission_comments.select{|c| course.classmates.include? c.author}.first.nil?) && (!a.submission_types.include? "online_url") # And the teacher of the course has left a comment on their submission
 
-      }.first
+  #     }.first
 
-    if assignment.nil?
-      puts "Cannot find assignment for task #{task.id}"
-      return
-    end
+  #   if assignment.nil?
+  #     puts "Cannot find assignment for task #{task.id}"
+  #     return
+  #   end
 
-    AgentTask.assignments << assignment
+  #   AgentTask.assignments << assignment
 
-    task.update_initalized_text("Course", course.course.name)
-    task.update_initalized_text("Assignment", assignment.title)
+  #   task.update_initalized_text("Course", course.course.name)
+  #   task.update_initalized_text("Assignment", assignment.title)
 
-  }
+  # }
 
-  tasks << task
+  # tasks << task
 
   task = AgentTask.new({
     id: '6242d2f1-f67e-4d56-a856-b9a5f536672f',
@@ -1798,7 +1822,9 @@ Steps:
 
   task = AgentTask.new({
     id: '8d2b6c85-7bc4-4683-b468-bf85542aa2c7',
-    parameterized_text: 'Task: View the peer review rubric assessment and comments left by your classmates for the assignment "[[Assignment]]" in the course "[[Course]]." 
+    type: 'Information Seeking',
+    answer_type: 'Numeric',
+    parameterized_text: 'Task: View the peer review rubric assessment and comments left by [[User]] for the assignment "[[Assignment]]" in the course "[[Course]]". How many points did [[User]] give you for the first criteria in the rubric? 
 
 To complete this task, navigate to the "[[Assignment]]" assignment, click the "Show Rubric" link, and review the ratings and comments provided by your peers. If there are multiple peer reviews, use the "Show Assessment By" drop-down menu to view each peer\'s rubric assessment.'
   })
@@ -1820,8 +1846,16 @@ To complete this task, navigate to the "[[Assignment]]" assignment, click the "S
 
     AgentTask.assignments << assignment
 
+    assessment = assignment.rubric_association.rubric_assessments.select{|assessment| (assessment.user == course.logged_in_user) && (course.classmates.include? assessment.assessor)}.first
+
+
     task.update_initalized_text("Course", course.course.name)
     task.update_initalized_text("Assignment", assignment.title)
+    task.update_initalized_text("User", assessment.assessor.name)
+    
+    task.answer_key = {
+      "Number": assessment.data[0]["points"].round
+    }
 
   }
 
@@ -1895,7 +1929,9 @@ To complete this task, navigate to the "[[Assignment]]" assignment, click the "S
 
   task = AgentTask.new({
     id: '542dda0b-1dd9-4c1b-86b3-7343786c226c',
-    parameterized_text: 'Task: View the rubric results and instructor comments for your submission to the assignment "[[Assignment]]" in the course "[[Course]]."
+    type: 'Information Seeking',
+    answer_type: 'Numeric',
+    parameterized_text: 'Task: View the rubric results and instructor comments for your submission to the assignment "[[Assignment]]" in the course "[[Course]]". How many points did you recieve for the first criteria in the rubric? 
 
 Steps:
 
@@ -1934,6 +1970,10 @@ Steps:
 
     task.update_initalized_text("Course", course.course.name)
     task.update_initalized_text("Assignment", assignment.title)
+
+    task.answer_key = {
+      "Number": assignment.rubric_association.rubric.data[0][:points]
+    }
 
   }
 
@@ -2191,7 +2231,9 @@ Steps:
 
   task = AgentTask.new({
     id: 'aa62cf92-1cdd-4b30-b49c-9f4e8791776f',
-    parameterized_text: 'Task: View the rubric for the assignment titled "[[Assignment]]" in the course "[[Course]]" by navigating to the Assignments page, clicking on "[[Assignment]]," and locating the rubric displayed below the assignment instructions.'
+    type: 'Information Seeking',
+    answer_type: 'Text',
+    parameterized_text: 'Task: View the rubric for the assignment titled "[[Assignment]]" in the course "[[Course]]" by navigating to the Assignments page, clicking on "[[Assignment]]," and locating the rubric displayed below the assignment instructions. What is the heading of the rubric for this assignment?'
   })
 
   task.populate(test_course) {|course, task|
@@ -2209,28 +2251,40 @@ Steps:
 
     task.update_initalized_text("Course", course.course.name)
     task.update_initalized_text("Assignment", assignment.title)
+    
+    task.answer_key = {
+      "Text": assignment.rubric_association.rubric.title
+    }
   }
 
   tasks << task
 
   task = AgentTask.new({
     id: 'c7a8b1a8-cd2c-4581-9cc3-89d2a1a4f788',
-    parameterized_text: 'Task: View the rubric for the graded discussion titled "[[Discussion]]" in the course "[[Course]]" by navigating to the Discussions section, selecting the discussion, and opening the rubric.'
+    type: 'Information Seeking',
+    answer_type: 'Numeric',
+    parameterized_text: 'Task: View the rubric for the graded discussion titled "[[Discussion]]" in the course "[[Course]]" by navigating to the Discussions section, selecting the discussion, and opening the rubric. How many points can you score for the first criteria of the rubric?'
   })
 
   task.populate(test_course) {|course, task|
 
-    discussion = course.discussions.select{|d| (!AgentTask.discussions.include? d) && (!d.assignment.nil?)}.first
+    discussion = course.discussions.select{|d| (!AgentTask.discussions.include? d) && (!d.assignment.nil?) && (!d.assignment.rubric_association.nil?)}.first
 
     if discussion.nil?
       puts "Cannot find discussion for task #{task.id}"
       return
     end
 
+    rubric = discussion.assignment.rubric_association.rubric
+
     AgentTask.discussions << discussion
 
     task.update_initalized_text("Course", course.course.name)
     task.update_initalized_text("Discussion", discussion.title)
+
+    task.answer_key = {
+      "Number": rubric.data[0][:points]
+    }
     
   }
 
@@ -2664,7 +2718,9 @@ Steps:
 
   task = AgentTask.new({
     id: 'fedf3006-7245-4d24-bade-d60bd0e8f6ba',
-    parameterized_text: 'Task: View the results of your second attempt on the "[[Quiz]]" in the "[[Course]]" course, and note the time it took to complete that attempt as displayed in the Last Attempt Details section.'
+    type: 'Information Seeking',
+    answer_type: 'Numeric',
+    parameterized_text: 'Task: View the results of your second attempt on the "[[Quiz]]" in the "[[Course]]" course, and report the time it took in minutes to complete that attempt as displayed in the Last Attempt Details section.'
   })
 
   task.populate(test_course) {|course, task|
@@ -2689,8 +2745,15 @@ Steps:
 
     AgentTask.quizzes << quiz
 
+    quiz_submission = quiz.quiz_submissions.select{|qs| (qs.user == course.logged_in_user) && (qs.attempt == 2)}.first
+  
+
     task.update_initalized_text("Course", course.course.name)
     task.update_initalized_text("Quiz", quiz.title)
+
+    task.answer_key = {
+      "Number": ((quiz_submission.finished_at - quiz_submission.started_at) / 1.minutes).round
+    }
 
   }
 
@@ -2698,7 +2761,9 @@ Steps:
 
   task = AgentTask.new({
     id: 'b26bef34-a1ce-45c7-9b8a-13651d76d367',
-    parameterized_text:'Task: View your peers\' feedback for the "[[Discussion]]" peer-reviewed discussion by accessing the Feedback tray from the Course Grades page in your "[[Course]]" course.'
+    type: 'Information Seeking',
+    answer_type: "Text",
+    parameterized_text:'Task: View the feedback you received from [[User]] for the "[[Discussion]]" peer-reviewed discussion by accessing the Feedback tray from the Course Grades page in your "[[Course]]" course. What was the comment that [[User]] left for your submission?'
   })
 
   task.populate(test_course){|course, task|
@@ -2710,10 +2775,20 @@ Steps:
       return
     end
 
+    submission = discussion.assignment.submissions.select{|s| s.user === course.logged_in_user}.first
+
+    comment = submission.submission_comments.select{|c| c.author != course.teacher}.first
+
+
     AgentTask.discussions << discussion
 
     task.update_initalized_text("Course", course.course.name)
     task.update_initalized_text("Discussion", discussion.title)
+    task.update_initalized_text("User", comment.author.name)
+
+    task.answer_key = {
+      "Text": comment.comment
+    }
 
   }
 
