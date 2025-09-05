@@ -694,7 +694,9 @@ def create_task_instances(test_course)
 
   task = AgentTask.new({
     id: "0b925826-6333-43cf-9eb0-4b5cb49a7e7d",
-    parameterized_text: "Task: In the course '[[Course]]' use the Syllabus page to find the due date for the assignment titled '[[Assignment]]' and list the due date as displayed in the Course Summary section."
+    type: 'Information Seeking',
+    answer_type: 'Date Time',
+    parameterized_text: 'Task: In the course "[[Course]]" use the Syllabus page to find the due date for the assignment titled "[[Assignment]]".'
   })
 
   task.populate(test_course) { |course,task|
@@ -714,6 +716,10 @@ def create_task_instances(test_course)
     # Generate task instance text
     task.update_initalized_text("Course", course.course.name )
     task.update_initalized_text("Assignment", assignment.title)
+
+    task.answer_key = {
+      "Date Time": assignment.due_at.strftime("%Y-%m-%d %H:%M")
+    }
 
   }
 
@@ -1032,7 +1038,9 @@ Steps to complete:
 
   task = AgentTask.new({
     id: '2f354ba2-b00c-4f3d-8b05-ae149f8e870d',
-    parameterized_text: 'Task: In the course "[[Course]]" view the page titled "[[Page]]" by navigating to the Pages Index and selecting the page from the list.'
+    type: 'Information Seeking',
+    answer_type: 'Text',
+    parameterized_text: 'Task: In the course "[[Course]]" view the page titled "[[Page]]" by navigating to the Pages Index and selecting the page from the list. Return the contents of the page body.'
   })
 
   task.populate(test_course) {|course,task|
@@ -1048,13 +1056,19 @@ Steps to complete:
 
     task.update_initalized_text("Course", course.course.name)
     task.update_initalized_text("Page", page.title)
+
+    task.answer_key = {
+      'Text': page.body.strip
+    }
   }
 
   tasks << task
 
   task = AgentTask.new({
     id: '2fb04821-58a4-4b0e-90b9-2b24882f4582',
-    parameterized_text: 'Task: In the course "[[Course]]," use the Quizzes page to find the quiz titled "[[Quiz]]," and view its availability dates, due date, point value, and number of questions. Write down the availability start date, due date, and the number of points the quiz is worth.'
+    type: 'Information Seeking',
+    answer_type: 'Numeric',
+    parameterized_text: 'Task: In the course "[[Course]]," use the Quizzes page to find the quiz titled "[[Quiz]]", report the number of questions this quiz has.'
   })
 
   task.populate(test_course) {|course, task|
@@ -1071,13 +1085,18 @@ Steps to complete:
     task.update_initalized_text("Course", course.course.name)
     task.update_initalized_text("Quiz", quiz.title)
 
+    task.answer_key = {
+      "Number": quiz.quiz_questions.length
+    }
   }
 
   tasks << task
 
   task = AgentTask.new({
     id: '353feae6-0efa-4913-8220-8ab2567696b4',
-    parameterized_text: 'Task: In the "[[Group]]" group, view the revision history of the page titled "[[Page]]" and identify the most recent edit and when it was made.'
+    type: 'Information Seeking',
+    answer_type: 'Date Time',
+    parameterized_text: 'Task: In the "[[Group]]" group, view the revision history of the page titled "[[Page]]" and identify the most recent edit and report when it was made.'
   })
 
   task.populate(test_course) {|course, task|
@@ -1105,6 +1124,17 @@ Steps to complete:
     task.update_initalized_text("Group", group["name"])
     task.update_initalized_text("Page", page["title"])
 
+    _page = _group.wiki_pages.select{|p| 
+    
+    if true # set true for debugging
+      puts "Looking for #{page["updates"][0]['title']}, current page title: #{p.title}"
+    end
+
+    p.title == page["updates"][0]['title']}.first
+
+    task.answer_key = {
+      "Date Time": _page.revised_at.strftime("%Y-%m-%d %H:%M")
+    }
 
   }
 
@@ -1112,7 +1142,9 @@ Steps to complete:
 
   task = AgentTask.new({
     id: '37949dc8-cc9a-46ec-9a04-9fc70de7739a',
-    parameterized_text: 'Task: In the course "[[Course]]," use the Assignments page to search for the assignment titled "[[Assignment]]." View the assignment details, including the due date, availability dates, point value, and any rubric provided.'
+    type: 'Information Seeking',
+    answer_type: 'Date Time',
+    parameterized_text: 'Task: In the course "[[Course]]," use the Assignments page to search for the assignment titled "[[Assignment]]." When is this assignment due?'
   })
 
   task.populate(test_course) {|course, task| 
@@ -1128,6 +1160,10 @@ Steps to complete:
 
     task.update_initalized_text("Course", course.course.name)
     task.update_initalized_text("Assignment", assignment.title)
+
+    task.answer_key = {
+      'Date Time': assignment.due_at.strftime("%Y-%m-%d %H:%M")
+    }
 
   }
 
@@ -1224,7 +1260,9 @@ Steps to complete:
 
   task = AgentTask.new({
     id: 'a7ab7dbf-7c80-4a13-80a4-f09947504d51',
-    parameterized_text: 'Task: Check if you can retake the "[[Quiz]]" in the "[[Course]]" course and note how many attempts you have remaining.
+    type: 'Information Seeking',
+    answer_type: 'Numeric',
+    parameterized_text: 'Task: Check if you can retake the "[[Quiz]]" in the "[[Course]]" course and report how many attempts you have remaining.
 
 Steps:
 
@@ -1236,18 +1274,23 @@ Steps:
 
   task.populate(test_course) {|course,task|
 
-    quiz = course.quizzes.select{|q| !AgentTask.quizzes.include? q}.first
+    quiz = course.quizzes.select{|q| (!AgentTask.quizzes.include? q) && (!q.quiz_submissions.select{|s| (s.user == course.logged_in_user) && (s.submission.submission_comments.length == 0)}.first.nil?)}.first
 
     if quiz.nil?
       puts "Cannot find quiz for task #{task.id}"
       return
     end
 
+    curr_attempts = quiz.quiz_submissions.select{|s| s.user == course.logged_in_user}.max_by(&:attempt)
+    
     AgentTask.quizzes << quiz
 
     task.update_initalized_text("Course", course.course.name)
     task.update_initalized_text("Quiz", quiz.title)
 
+    task.answer_key = {
+      'Number': quiz.allowed_attempts - curr_attempts.attempt
+    }
   }
 
   tasks << task
@@ -1318,7 +1361,9 @@ Steps to complete:
 
   task = AgentTask.new({
     id: '1bfdc4bc-1ab2-4846-b840-4c65d9f9c83f',
-    parameterized_text: 'Task: In the Canvas course "[[Course]]," locate and view the peer feedback you received for the assignment titled "[[Assignment]]" by accessing the submission details page and clicking the "View Feedback" button.'
+    type: 'Information Seeking',
+    answer_type: 'Text',
+    parameterized_text: 'Task: In the Canvas course "[[Course]]," locate and view the peer feedback you received for the assignment titled "[[Assignment]]" by accessing the submission details page. What was the feedback [[User]] provided to your submission?'
   })
 
   task.populate(test_course) {|course, task| 
@@ -1327,6 +1372,7 @@ Steps to complete:
       (!AgentTask.assignments.include? a) && # Find an assignment that hasn't already been used.
        (!a.submissions.where(user_id: course.logged_in_user).first.body.nil?) && # Where the logged in user has made a submission whose body isn't nil
        ((a.rubric_association.nil?) || (a.rubric_association.rubric_assessments.length == 0)) && # Don't use up assignments with rubric assessments on this task.
+       (!a.submissions.where(user_id: course.logged_in_user).first.body.nil?) && 
        (!a.submissions.where(user_id: course.logged_in_user).first.submission_comments.select{|c| course.classmates.include? c.author}.first.nil?) && (!a.submission_types.include? "online_url") # And the teacher of the course has left a comment on their submission
     
       }.first
@@ -1338,8 +1384,15 @@ Steps to complete:
 
     AgentTask.assignments << assignment
 
+    submission_comment = assignment.submissions.where(user_id: course.logged_in_user).first.submission_comments.select{|c| course.classmates.include? c.author}.first
+
     task.update_initalized_text("Course", course.course.name)
     task.update_initalized_text("Assignment", assignment.title)
+    task.update_initalized_text("User", submission_comment.author.name)
+
+    task.answer_key = {
+      "Text": submission_comment.comment
+    }
 
   }
 
@@ -1647,7 +1700,9 @@ Steps:
 
   task = AgentTask.new({
     id: 'bd1583a6-7c16-4d45-9cfb-e6bce6d088a0',
-    parameterized_text: 'Task: Check if you have a peer review discussion to complete for the course "[[Course]]" and identify the name of the student whose post you need to review.
+    type: 'Information Seeking',
+    answer_type: 'Text',
+    parameterized_text: 'Task: Check if you have a peer review discussion to complete for the course "[[Course]]" and identify the name of a student whose post you need to review.
 
 Steps:
 
@@ -1655,7 +1710,7 @@ Steps:
 2. In the Global Activity Stream, look for any recent activity related to peer review discussions for "[[Course]]."
 3. Click the "Show More" link if needed to expand the list of activities.
 4. Locate the peer review notification for the discussion titled "[[Discussion]]."
-5. Note the name of the student assigned to you for peer review.'
+5. Note the name of a student assigned to you for peer review.'
   })
 
   task.populate(test_course) {|course, task|
@@ -1672,6 +1727,11 @@ Steps:
 
     task.update_initalized_text("Course", course.course.name)
     task.update_initalized_text("Discussion", discussion.title)
+    
+    task.answer_key = {
+      "Text": AssessmentRequest.for_assignment(discussion.assignment.id).select{|a| a.assessor == course.logged_in_user}.map{|a| a.user.name}
+    }
+    
 
 
   }
@@ -1719,7 +1779,9 @@ Steps:
 
   task = AgentTask.new({
     id: '0455d1fc-9c89-490f-aea1-f6234029f2ba',
-    parameterized_text: 'Task: Verify that you have successfully submitted your "[[Assignment]]" assignment in the "[[Course]]" course by viewing the submission confirmation details.
+    type: 'Information Seeking',
+    answer_type: 'Date Time',
+    parameterized_text: 'Task: Verify that you have successfully submitted your "[[Assignment]]" assignment in the "[[Course]]" course by viewing the submission confirmation details. What is the date time that you made your submission?
 
 Steps:
 1. In Canvas, open the "[[Course]]" course.
@@ -1743,8 +1805,15 @@ Steps:
 
     AgentTask.assignments << assignment
 
+    submission = assignment.submissions.where(user_id: course.logged_in_user).first
+
     task.update_initalized_text("Course", course.course.name)
     task.update_initalized_text("Assignment", assignment.title)
+
+    task.answer_key = {
+      "Date Time": submission.submitted_at.strftime("%Y-%m-%d %H:%M")
+    }
+
 
   }
 
@@ -2006,7 +2075,9 @@ Steps:
 
   task = AgentTask.new({
     id:'72966af5-5445-4226-8236-e94352fb514b',
-    parameterized_text: 'Task: In the course "[[Course]]," open the discussion titled "[[Discussion]]" and filter the discussion to show only unread replies.'
+    type: 'Information Seeking',
+    ansewer_type: 'Numeric',
+    parameterized_text: 'Task: In the course "[[Course]]," open the discussion titled "[[Discussion]]". How many replies are there for this discussion?'
   })
 
   task.populate(test_course) {|course, task|
@@ -2025,6 +2096,10 @@ Steps:
 
     task.update_initalized_text("Course", course.course.name)
     task.update_initalized_text("Discussion", discussion.title)
+
+    task.answer_key = {
+      'Number': discussion.discussion_entries.length
+    }
 
   }
 
@@ -2149,7 +2224,9 @@ Steps:
 
   task = AgentTask.new({
     id: '96290cff-cfa7-4712-8f63-0a853cdbf0c7',
-    parameterized_text: 'Task: Locate and open your assigned peer review for the "[[Assignment]]" assignment in the "[[Course]]" course using the To Do list on your Canvas Dashboard.'
+    type: 'Information Seeking',
+    answer_type: 'Text',
+    parameterized_text: 'Task: Locate and open your assigned peer review for the "[[Assignment]]" assignment in the "[[Course]]" course using the To Do list on your Canvas Dashboard. What is the name of the student whose submission you are reviewing?'
   })
 
   task.populate(test_course) {|course, task|
@@ -2167,6 +2244,10 @@ Steps:
 
     task.update_initalized_text("Course", course.course.name)
     task.update_initalized_text("Assignment", assignment.title)
+
+    task.answer_key = {
+      "Text": AssessmentRequest.for_assignment(assignment.id).select{|a| a.assessor == course.logged_in_user}.map{|a| a.user.name}
+    }
 
   }
 
@@ -2397,6 +2478,8 @@ Steps:
 
   task = AgentTask.new({
     id: 'db729474-de9b-410b-9476-7e1b49775d3a',
+    type: 'Information Seeking',
+    answer_type: 'Numeric',
     parameterized_text: 'Task: Check if your instructor has graded your "[[Assignment]]" assignment in the "[[Course]]" course and note the score you received.
 
 Steps:
@@ -2423,6 +2506,12 @@ Steps:
 
     task.update_initalized_text("Course", course.course.name)
     task.update_initalized_text("Assignment", assignment.title)
+
+    submission = assignment.submissions.where(user_id: course.logged_in_user).first
+
+    task.answer_key = {
+      "Number": submission.grade.to_i
+    }
 
   }
 
@@ -2601,7 +2690,9 @@ Instructions:
 
   task = AgentTask.new({
     id: '0b71d13d-f7dd-4a09-b575-6d6677b6e70c',
-    parameterized_text: 'Task: In the course "[[Course]]" view all modules, expand the module titled [[Module]]" and identify the due date and point value for the assignment named "[[Assignment]]."'
+    type: 'Information Seeking',
+    answer_type: 'Date Time',
+    parameterized_text: 'Task: In the course "[[Course]]" view all modules, expand the module titled [[Module]]" and identify the due date for the assignment named "[[Assignment]]."'
   })
 
   task.populate(test_course) {|course, task|
@@ -2622,6 +2713,10 @@ Instructions:
     task.update_initalized_text("Course", course.course.name)
     task.update_initalized_text("Assignment", assignment.title)
     task.update_initalized_text("Module", _module.name)
+
+    task.answer_key = {
+      "Date Time": assignment.due_at.strftime("%Y-%m-%d %H:%M")
+    }
 
   }
 
@@ -2796,12 +2891,18 @@ Steps:
 
   task = AgentTask.new({
     id: 'd8f5a7b0-64e5-4c07-aff4-44d0e26f2eb2',
-    parameterized_text: 'Task: In the course "[[Course]]," view your Learning Mastery grades for the outcome group "[[Course]]" expand the group to see all outcomes, and report the number of mastered outcomes.'
+    type: 'Information Seeking',
+    answer_type: 'Numeric',
+    parameterized_text: 'Task: In the course "[[Course]]" view your Learning Mastery grades for the outcome group "[[Course]]" expand the group to see all outcomes, and report the number of mastered outcomes.'
   })
 
   task.populate(test_course) {|course, task|
 
     task.update_initalized_text("Course", course.course.name)
+
+    task.answer_key = {
+      "Number": 0
+    }
 
   }
 

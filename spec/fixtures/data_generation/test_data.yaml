@@ -307,6 +307,7 @@ courses:
           updates:
             - title: Added more notes on Chapter 3
               body: Included details on the stages of cognitive development.
+              revised_at: 2026-02-12 14:00:00
         - title: Group project topic ideas
           body: |
             We should brainstorm possible topics for the group project. Drop suggestions here!
@@ -1334,6 +1335,57 @@ courses:
               feedback:
                 grader: instructor
                 comment: You can do better than this.
+    - title: Advanced Topics in Cognitive Psychology
+      description: A quiz to assess deeper understanding of advanced concepts in memory, cognition, and related processes.
+      due_at: 2026-12-05 18:00:00
+      published_at: 2025-09-04 14:30:00
+      workflow_state: available
+      allowed_attempts: 2
+      one_question_at_a_time: true
+      rubric: 
+        title: Advanced Cognition Rubric
+        description: A rubric for evaluating higher-level knowledge of memory and cognitive psychology.
+        public: true
+        points_possible: 60
+        free_form_criterion_comments: false
+      questions:
+        - name: Question 1
+          id: 41
+          question_type: multiple_choice_question
+          points_possible: 10
+          question_text: "<p>According to Baddeley’s model of working memory, which component is primarily responsible for holding and manipulating visual and spatial information?</p>"
+          answers:
+            - weight: 100
+              text: Visuospatial sketchpad
+              id: 101
+            - weight: 0
+              text: Phonological loop
+              id: 102
+            - weight: 0
+              text: Episodic buffer
+              id: 103
+            - weight: 0
+              text: Central executive
+              id: 104
+      submissions:
+        - user: main_user
+          attempts:
+            - workflow_state: "complete"
+              answers:
+              - correct: false
+                points: 0.0
+                question_id: 28
+                answer_id: 300
+                text: "300"
+                attempt: 1
+            - workflow_state: "complete"
+              answers:
+                - correct: false
+                  points: 0.0
+                  question_id: 26
+                  answer_id: 400
+                  text: "400"
+                  attempt: 2
     - title: Memory and Cognition
       description: A quiz to test knowledge of key concepts in memory and cognitive psychology.
       due_at: 2026-11-15 18:00:00
